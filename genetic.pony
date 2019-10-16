@@ -4,7 +4,7 @@ use "random"
 use "time"
 use "debug"
 
-interface GeneticAlgorithmDelegate[T]
+interface GeneticAlgorithmDelegate[T: Any ref]
 
 	// generate organisms: delegate received the population index of the new organism, and a uint suitable
 	// for seeding a RNG. delegete should return a newly allocated organism with assigned chromosomes.
@@ -26,7 +26,7 @@ interface GeneticAlgorithmDelegate[T]
 	//fun chosenOrganism(a:Any, score:U64, generation:U64, rand:Rand): Bool
 
 
-actor GeneticAlgorithm[T]
+actor GeneticAlgorithm[T: Any ref]
 	
 	var gaDelegate:GeneticAlgorithmDelegate[T]
 	var rand:Rand
@@ -47,6 +47,8 @@ actor GeneticAlgorithm[T]
 		var organismB = gaDelegate.generateOrganism(rand)
 		var organismC = gaDelegate.generateOrganism(rand)
 		
-		//gaDelegate.breedOrganisms(organismA, organismB, organismC, rand)
+		gaDelegate.breedOrganisms(organismA, organismA, organismC, rand)
+		
+		gaDelegate.breedOrganisms(organismA, organismB, organismC, rand)
 	
 

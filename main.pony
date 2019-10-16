@@ -63,7 +63,6 @@ class CAT
 	fun generateOrganism(rand: Rand) : Organism => 
 		let o = Organism(size)
 		o.randomizeAll(characters, rand)
-		Debug.out(o.string())
 		o
 	
 	fun breedOrganisms(a:Organism, b:Organism, child:Organism, rand:Rand) =>
@@ -73,31 +72,29 @@ class CAT
 	    1) If we are breeding someone asexually, we simply give them a high chance of a single mutation (we assume they're close to perfect and should only be tweaked a little)
 	    2) If we are breeding two distinct individuals, choose some chromosomes randomly from each parent, and have a small chance to mutate any chromosome
 		"""
-		
-		if a == b then
+		if a is b then
             // breed an organism with itself; this is optimized as we generally want a higher chance to singly mutate something
             // think of this as we almost have the perfect organism, we just want to tweak one thing
 			child.copy(a)
 			child.randomizeOne(characters, rand)
-			
-			Debug.out(child.string())
+		else
+			// breed two organisms, we'll do this by randomly choosing chromosomes from each parent, with the odd-ball mutation
+			try
+				for i in Range[USize](0, target.size() ) do
+	                let t = rand.u32() % 100
+	                if t < 45 then
+	                    child.content(i)? = a.content(i)?
+	                elseif (t < 90) then
+	                    child.content(i)? = b.content(i)?
+	                else
+						let c = characters(rand.usize() % characters.size())?
+	                    child.content(i)? = c
+					end
+				end
+			end
 		end
-		/*
-		 else {
-    
-            // breed two organisms, we'll do this by randomly choosing chromosomes from each parent, with the odd-ball mutation
-            for i in 0..<targetString.count {
-                let t = prng.getRandomNumberf()
-                if (t < 0.45) {
-                    child [i] = organismA [i];
-                } else if (t < 0.9) {
-                    child [i] = organismB [i];
-                } else {
-                    child [i] = prng.getRandomObjectFromArray(allCharacters)
-                }
-            }
-        }*/
-		
+
+
 
 actor Main
 	new create(_env: Env) =>
