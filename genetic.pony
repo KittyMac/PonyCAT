@@ -6,6 +6,8 @@ use "debug"
 
 interface GeneticAlgorithmDelegate[T: Any ref]
 
+	fun printOrganism(a:T)
+
 	// generate organisms: delegate received the population index of the new organism, and a uint suitable
 	// for seeding a RNG. delegete should return a newly allocated organism with assigned chromosomes.
 	fun generateOrganism(rand:Rand): T
@@ -46,9 +48,15 @@ actor GeneticAlgorithm[T: Any ref]
 		var organismA = gaDelegate.generateOrganism(rand)
 		var organismB = gaDelegate.generateOrganism(rand)
 		var organismC = gaDelegate.generateOrganism(rand)
+		var organismD = gaDelegate.generateOrganism(rand)
 		
 		gaDelegate.breedOrganisms(organismA, organismA, organismC, rand)
 		
-		gaDelegate.breedOrganisms(organismA, organismB, organismC, rand)
+		gaDelegate.breedOrganisms(organismA, organismB, organismD, rand)
+		
+		gaDelegate.printOrganism(organismA)
+		gaDelegate.printOrganism(organismB)
+		gaDelegate.printOrganism(organismC)
+		gaDelegate.printOrganism(organismD)
 	
 

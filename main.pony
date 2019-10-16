@@ -59,6 +59,9 @@ class CAT
 		size = size'		
 		
 		Debug.out("... create CAT of size " + size.string())
+	
+	fun printOrganism(a:Organism) =>
+		Debug.out(a.string())
 		
 	fun generateOrganism(rand: Rand) : Organism => 
 		let o = Organism(size)
