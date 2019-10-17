@@ -52,13 +52,17 @@ class Organism
 
 class CAT
 	var size: USize
-	var target: String = "SUPERCALIFRAGILISTICEXPIALIDOCIOUS"
-	var characters: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	var target: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sodales velit et velit viverra, porta porta ligula sollicitudin. Pellentesque commodo eu nunc finibus mollis. Proin sit amet volutpat sem. Quisque sit amet auctor risus. Duis porta elit vestibulum velit gravida fermentum. Sed lacinia ornare odio, ut vestibulum lacus hendrerit vitae. Suspendisse egestas, ex ut tincidunt mattis, mauris ligula placerat nisi, vel lacinia elit ex feugiat ex. Sed urna lorem, eleifend id maximus sit amet, dictum eu nisi. Nunc consectetur libero gravida ultricies hendrerit. In volutpat mollis eros id rhoncus. Etiam sagittis dapibus neque at condimentum."
+	var characters: String = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&\\'()*+,-./:;?@[\\\\]^_`{|}~ \\t\\n\\r\\x0b\\x0c"
 
 	new iso create(size': USize) =>
 		size = size'
 		
-		size = target.size()
+		if size >= target.size() then
+			size = target.size()
+		end
+		
+		target = target.substring(0, size.isize())
 		
 		Debug.out("... create CAT of size " + size.string())
 	
