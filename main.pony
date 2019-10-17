@@ -15,7 +15,7 @@ class Organism
 	fun eq(other: Organism box): Bool =>
 		content == other.content
 	
-	fun string():String => 
+	fun string(): String iso^ =>
 		let output = recover String(size) end
 		try
 			for i in Range[USize](0, size) do
@@ -56,14 +56,16 @@ class CAT
 	var characters: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	new iso create(size': USize) =>
-		size = size'		
+		size = size'
+		
+		size = target.size()
 		
 		Debug.out("... create CAT of size " + size.string())
 	
 	fun printOrganism(a:Organism) =>
 		Debug.out(a.string())
 		
-	fun generateOrganism(rand: Rand) : Organism => 
+	fun generateOrganism(idx:USize, rand: Rand) : Organism => 
 		let o = Organism(size)
 		o.randomizeAll(characters, rand)
 		o
@@ -96,6 +98,21 @@ class CAT
 				end
 			end
 		end
+	
+	fun scoreOrganism(a:Organism, rand:Rand):I64 =>
+		var score:I64 = 0
+        var diff:I64 = 0
+		try
+			for i in Range[USize](0, target.size() ) do
+	            diff = target(i)?.i64() - a.content(i)?.i64()
+	            score = score + (diff * diff)
+			end
+		end
+        -score
+	
+	fun chosenOrganism(a:Any, score:I64, generation:U64, rand:Rand): Bool =>
+		//(score == 0)
+		false
 
 
 
@@ -141,15 +158,8 @@ actor Main
 		
 		let cat = CAT(sizeOfTarget.usize())
 		var ga = GeneticAlgorithm[Organism](consume cat)
-		Debug.out("Main is done")
+		
+		ga.performGenetics(_env, 5000)
 			
-		/*
-	let upper = cmd.option("upper").bool()
-	let words = cmd.arg("words").string_seq()
-	for word in words.values() do
-		env.out.write(if upper then word.upper() else word end + " ")
-	end
-	env.out.print("")
-		*/
 	
 
