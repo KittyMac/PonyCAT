@@ -48,7 +48,7 @@ actor GeneticAlgorithm[T: Stringable ref]
 	    let tsc: U64 = @ponyint_cpu_tick[U64]()
 	    rand = Rand(tsc, t2.u64())
 	
-	be performGenetics(_env: Env, msTimeout:U64) =>
+	be performGenetics(msTimeout:U64, completion: {(T, I64, U64, U64)} val) =>
 		// simple counter to keep track of the number of generations (parents selected to breed a child) have passed
 		var numberOfGenerations:U64 = 0
 		
@@ -153,9 +153,5 @@ actor GeneticAlgorithm[T: Stringable ref]
 			Debug.out("Exception occurred during breeding")
 		end
 		
-		// (swift): Done in 5000ms and 6,397,188 generations
-		// (pony): Done in 5001ms and 15,721,077 generations
-		// all done!
-		_env.out.print("Best organism: " + bestOrganism.string())
-		_env.out.print("Done in " + (currentTick - startTick).string() + "ms and " + numberOfGenerations.string() + " generations")
+		completion(bestOrganism, bestOrganismScore, numberOfGenerations, (currentTick - startTick))
 
