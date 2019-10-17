@@ -154,7 +154,7 @@ actor GeneticAlgorithm[T: Stringable ref]
 		end
 		
 		// (swift): Done in 5000ms and 6,397,188 generations
-		// (pony): Done in 5001ms and 12,582,729 generations
+		// (pony): Done in 5001ms and 15,721,077 generations
 		// all done!
 		_env.out.print("Best organism: " + bestOrganism.string())
 		_env.out.print("Done in " + (currentTick - startTick).string() + "ms and " + numberOfGenerations.string() + " generations")
