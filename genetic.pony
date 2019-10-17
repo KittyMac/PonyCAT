@@ -36,6 +36,8 @@ actor GeneticAlgorithm[T: Stringable ref]
 	// population size: tweak this to your needs
     let numberOfOrganisms:USize = 20
 	let numberOfOrganismsMinusOne:USize = numberOfOrganisms - 1
+	
+	let numberOfOrganismsf:F64 = numberOfOrganisms.f64()
     
 	new create(gaDelegate': GeneticAlgorithmDelegate[T] iso) =>
 		Debug.out("... create GeneticAlgorithm")
@@ -45,22 +47,6 @@ actor GeneticAlgorithm[T: Stringable ref]
 	    (_, let t2: I64) = Time.now()
 	    let tsc: U64 = @ponyint_cpu_tick[U64]()
 	    rand = Rand(tsc, t2.u64())
-		
-		/*
-		var organismA = gaDelegate.generateOrganism(rand)
-		var organismB = gaDelegate.generateOrganism(rand)
-		var organismC = gaDelegate.generateOrganism(rand)
-		var organismD = gaDelegate.generateOrganism(rand)
-		
-		gaDelegate.breedOrganisms(organismA, organismA, organismC, rand)
-		
-		gaDelegate.breedOrganisms(organismA, organismB, organismD, rand)
-		
-		gaDelegate.printOrganism(organismA)
-		gaDelegate.printOrganism(organismB)
-		gaDelegate.printOrganism(organismC)
-		gaDelegate.printOrganism(organismD)
-		*/
 	
 	be performGenetics(_env: Env, msTimeout:U64) =>
 		// simple counter to keep track of the number of generations (parents selected to breed a child) have passed
@@ -106,9 +92,22 @@ actor GeneticAlgorithm[T: Stringable ref]
 				
 					numberOfGenerations = numberOfGenerations + 1
 				
-					// for now, just breed two random organisms together
-					let a = rand.usize() % numberOfOrganisms
-					let b = rand.usize() % numberOfOrganisms
+					// Breed the best organism asexually.
+					// IT IS BEST IF THE BREEDORGANISM DELEGATE CAN RECOGNIZE THIS AND FORCE A HIGHER RATE OF SINGLE CHROMOSOME MUTATION
+					var a = numberOfOrganismsMinusOne
+					var b = numberOfOrganismsMinusOne
+					
+                    if i == 0 then
+                        // Breed the pretty ones together: favor choosing two parents with good fitness values
+                        a = Easing.easeOutExpo (0, numberOfOrganismsf, rand.real()).usize()
+                        b = Easing.easeOutExpo (0, numberOfOrganismsf, rand.real()).usize()
+					end
+                    if i == 1 then
+                        // Breed a pretty one and an ugly one: favor one parent with a good fitness value, and another parent with a bad fitness value
+                        a = Easing.easeInExpo (0, numberOfOrganismsf, rand.real()).usize()
+                        b = Easing.easeOutExpo (0, numberOfOrganismsf, rand.real()).usize()
+					end
+					
 					gaDelegate.breedOrganisms (allOrganisms(a)?, allOrganisms(b)?, newChild, rand)
 					
 					// record the fitness value of the newly bred child
@@ -128,26 +127,6 @@ actor GeneticAlgorithm[T: Stringable ref]
 						// re-sort the organisms
 						ArgSort[Array[I64], I64, Array[T], T](allOrganismScores, allOrganisms)
 					end
-        
-					/*
-                    // Below we have four different methods for selecting parents to breed. Each are explained individually
-                    if i == 0 then
-                        // Breed the pretty ones together: favor choosing two parents with good fitness values
-                        a = (easeOutExpo (0, 1, prng.getRandomNumberf()) * numberOfOrganismsMinusOnef)
-                        b = (easeOutExpo (0, 1, prng.getRandomNumberf()) * localNumberOfOrganismsMinusOnef)
-                        gaDelegate.breedOrganisms (allOrganisms [Int(a)]!, allOrganisms [Int(b)]!, newChild, prng)
-                    else if i == 1 then
-                        // Breed a pretty one and an ugly one: favor one parent with a good fitness value, and another parent with a bad fitness value
-                        a = (easeInExpo (0, 1, prng.getRandomNumberf()) * localNumberOfOrganismsMinusOnef)
-                        b = (easeOutExpo (0, 1, prng.getRandomNumberf()) * localNumberOfOrganismsMinusOnef)
-                        gaDelegate.breedOrganisms (allOrganisms [Int(a)]!, allOrganisms [Int(b)]!, newChild, prng)
-                    else if i == 2 then
-                        // Breed the best organism asexually: IT IS BEST IF THE BREEDORGANISM DELEGATE CAN RECOGNIZE THIS AND FORCE A HIGHER RATE OF SINGLE CHROMOSOME MUTATION
-                        a = localNumberOfOrganismsMinusOnef
-                        b = localNumberOfOrganismsMinusOnef
-                        gaDelegate.breedOrganisms (allOrganisms [Int(a)]!, allOrganisms [Int(b)]!, newChild, prng)
-                    end
-					*/
 					
 					bestOrganism = allOrganisms(numberOfOrganismsMinusOne)?
 					bestOrganismScore = allOrganismScores(numberOfOrganismsMinusOne)?
@@ -171,7 +150,7 @@ actor GeneticAlgorithm[T: Stringable ref]
 				end
 			end
 		else
-			Debug.out("Exception occured during breeding")
+			Debug.out("Exception occurred during breeding")
 		end
 		
 		// (swift): Done in 5000ms and 6,397,188 generations
