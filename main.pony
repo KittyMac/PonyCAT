@@ -166,7 +166,7 @@ actor Main
 			// (swift): Done in 5000ms and 6,397,188 generations
 			// (pony): Done in 5001ms and 15,721,077 generations
 			// all done!
-			out.print("Best organism: " + bestOrganism.string())
+			out.print("[" + bestScore.string() + "] Best organism: " + bestOrganism.string())
 			out.print("Done in " + runTimeInMS.string() + "ms and " + numberOfGenerations.string() + " generations")
 		} val)			
 	
