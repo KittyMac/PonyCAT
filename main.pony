@@ -8,23 +8,21 @@ class Organism
 	var content:String ref
 	let size:USize
 	
-	new create(size': USize) =>
+	new ref create_ref(size': USize) =>
 		size = size'
 		content = recover String end
+	
+	new val create_val(content': String iso) =>
+		content = consume content'
+		size = content.size()
 	
 	fun eq(other: Organism box): Bool =>
 		content == other.content
 	
 	fun string(): String iso^ =>
-		let output = recover String(size) end
-		try
-			for i in Range[USize](0, size) do
-				output.push(content(i)?)
-			end
-		end
-		output
+		content.clone()
 	
-	fun ref copy(other:Organism) =>
+	fun ref copy(other:Organism box) =>
 		content.clear()
 		try
 			for i in Range[USize](0, size) do
@@ -50,12 +48,12 @@ class Organism
 
 
 
-class CAT
+class val CAT
 	var size: USize
 	var target: String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sodales velit et velit viverra, porta porta ligula sollicitudin. Pellentesque commodo eu nunc finibus mollis. Proin sit amet volutpat sem. Quisque sit amet auctor risus. Duis porta elit vestibulum velit gravida fermentum. Sed lacinia ornare odio, ut vestibulum lacus hendrerit vitae. Suspendisse egestas, ex ut tincidunt mattis, mauris ligula placerat nisi, vel lacinia elit ex feugiat ex. Sed urna lorem, eleifend id maximus sit amet, dictum eu nisi. Nunc consectetur libero gravida ultricies hendrerit. In volutpat mollis eros id rhoncus. Etiam sagittis dapibus neque at condimentum."
 	var characters: String = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$%&\\'()*+,-./:;?@[\\\\]^_`{|}~ \\t\\n\\r\\x0b\\x0c"
 
-	new iso create(size': USize) =>
+	new val create(size': USize) =>
 		size = size'
 		
 		if size >= target.size() then
@@ -70,11 +68,14 @@ class CAT
 		Debug.out(a.string())
 		
 	fun generateOrganism(idx:USize, rand: Rand) : Organism => 
-		let o = Organism(size)
+		let o = Organism.create_ref(size)
 		o.randomizeAll(characters, rand)
 		o
 	
-	fun breedOrganisms(a:Organism, b:Organism, child:Organism, rand:Rand) =>
+	fun cloneOrganism(a:Organism box): Organism val =>
+		Organism.create_val(a.string())
+	
+	fun breedOrganisms(a:Organism box, b:Organism box, child:Organism, rand:Rand) =>
 		"""
 		Breed organisms delegate needs to breed two organisms together and put their chromosomes into the child
 	    in some manner. We have two ways we breed:
@@ -103,7 +104,7 @@ class CAT
 			end
 		end
 	
-	fun scoreOrganism(a:Organism, rand:Rand):I64 =>
+	fun scoreOrganism(a:Organism box, rand:Rand):I64 =>
 		var score:I64 = 0
         var diff:I64 = 0
 		try
@@ -114,7 +115,7 @@ class CAT
 		end
         -score
 	
-	fun chosenOrganism(a:Any, score:I64, rand:Rand): Bool =>
+	fun chosenOrganism(a:Organism box, score:I64, rand:Rand): Bool =>
 		//(score == 0)
 		false
 
@@ -129,7 +130,7 @@ actor Main
 				"PonyCAT", 
 				"A quick experiment with genetic algorithms in Pony", 
 				[ 
-					OptionSpec.u64("n", "size of string to generate" where short' = 'n', default' = 50)
+					OptionSpec.u64("n", "size of string to generate" where short' = 'n', default' = 5000)
 					OptionSpec.u64("j", "amount of parallelism" where short' = 'j', default' = 1)
 				], 
 				[  ]
@@ -161,7 +162,7 @@ actor Main
 		Debug.out("")
 		
 		let cat = CAT(sizeOfTarget.usize())
-		var ga = GeneticCoordinator[Organism](0, consume cat, {(bestOrganism: Organism, bestScore: I64, numberOfGenerations:U64, runTimeInMS:U64)(out = _env.out) =>
+		var ga = GeneticCoordinator(0, 5000, cat, {(bestOrganism: Organism box, bestScore: I64, numberOfGenerations:USize, runTimeInMS:U64)(out = _env.out) =>
 			// (swift): Done in 5000ms and 6,397,188 generations
 			// (pony): Done in 5001ms and 15,721,077 generations
 			// all done!
