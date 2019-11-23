@@ -10,22 +10,22 @@ interface GeneticAlgorithmDelegate
 
 	// generate organisms: delegate received the population index of the new organism, and a uint suitable
 	// for seeding a RNG. delegete should return a newly allocated organism with assigned chromosomes.
-	fun generateOrganism(idx:USize, rand:Rand): Organism
+	fun generateOrganism(idx:USize, rand:SharedRand): Organism
 	
 	// breed organisms: delegate is given two parents, a child, and a uint suitable for seeding a RNG.
 	// delegete should fill out the chromosomes of the child with chromosomes selected from each parent,
 	// along with any possible mutations which might occur.
-	fun breedOrganisms(a:Organism box, b:Organism box, child:Organism, rand:Rand)
+	fun breedOrganisms(a:Organism box, b:Organism box, child:Organism, rand:SharedRand)
 	
 	// score organism: delegate is given and organism and should return a float value representing the
 	// "fitness" of the organism. Higher scores must always be better scores!
-	fun scoreOrganism(a:Organism box, rand:Rand):I64
+	fun scoreOrganism(a:Organism box, rand:SharedRand):I64
 	
 	// choose organism: delegate is given an organism, its fitness score, and the number of generations
 	// processed so far. return true to signify this organism's answer is
 	// sufficient and the genetic algorithm should stop; return false to tell the genetic algorithm to
 	// keep processing.
-	fun chosenOrganism(a:Organism box, score:I64, rand:Rand): Bool
+	fun chosenOrganism(a:Organism box, score:I64, rand:SharedRand): Bool
 	
 	// return a copy of an organism
 	fun cloneOrganism(a:Organism box): Organism val
@@ -44,7 +44,7 @@ actor GeneticProcessor
 	let startTick:U64 = Time.millis()
 
 	let gaDelegate:GeneticAlgorithmDelegate val
-	var rand:Rand
+	var rand:SharedRand
 
 	// population size: tweak this to your needs
     let numberOfOrganisms:USize = 20
@@ -58,7 +58,9 @@ actor GeneticProcessor
 
     var newChild:Organism
     var newChildScore:I64
-
+	
+	fun _tag():USize => 2
+	
 	new create(processorID':USize, msTimeout':U64, gaDelegate': GeneticAlgorithmDelegate val) =>
 	
 		processorID = processorID'
@@ -67,7 +69,7 @@ actor GeneticProcessor
 	
 	    (_, let t2: I64) = Time.now()
 	    let tsc: U64 = @ponyint_cpu_tick[U64]()
-	    rand = Rand(tsc, t2.u64())
+	    rand = SharedRand(tsc, t2.u64())
 	
 		// Call the delegate to generate all of the organisms in the population array; score them as well
 		for i in Range[USize](0, numberOfOrganisms ) do
@@ -182,6 +184,10 @@ actor GeneticCoordinator
 	let startTick:U64 = Time.millis()
     let msTimeout:U64
 	
+	fun _tag():USize => 1
+	fun _batch():USize => 1_000_000
+	fun _priority():USize => 1
+	
 	new create(	numberOfProcessors':USize,
 				msTimeout':U64,
 				gaDelegateVal': GeneticAlgorithmDelegate val,
@@ -192,13 +198,12 @@ actor GeneticCoordinator
 		completionVal = completionVal'
 		msTimeout = msTimeout'
 		
-		// if numberOfProcessors is 0 then use the number of available cpus
 		if numberOfProcessors == 0 then
-			numberOfProcessors = 28
+			numberOfProcessors = 1
 		end
 		
-	    bestOrganism = recover val gaDelegateVal.generateOrganism(0, Rand) end
-	    bestOrganismScore = gaDelegateVal.scoreOrganism(bestOrganism, Rand)
+	    bestOrganism = recover val gaDelegateVal.generateOrganism(0, SharedRand) end
+	    bestOrganismScore = gaDelegateVal.scoreOrganism(bestOrganism, SharedRand)
 		
 		numProcessorsNotFinished = numberOfProcessors
 		for i in Range[USize](0, numberOfProcessors) do

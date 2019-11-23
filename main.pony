@@ -4,13 +4,18 @@ use "debug"
 use "time"
 use "cli"
 
+// Options: SplitMix64, XorShift128Plus, XorOshiro128Plus, XorOshiro128StarStar, MT
+// and FastRand
+type SharedRand is FastRand
+
+
 class Organism
 	var content:String ref
 	let size:USize
 	
 	new ref create_ref(size': USize) =>
 		size = size'
-		content = recover String end
+		content = recover String(size) end
 	
 	new val create_val(content': String iso) =>
 		content = consume content'
@@ -30,7 +35,7 @@ class Organism
 			end
 		end
 	
-	fun ref randomizeAll(characters: String, rand: Rand) =>
+	fun ref randomizeAll(characters: String, rand: SharedRand) =>
 		content.clear()
 		try
 			for i in Range[USize](0, size) do
@@ -39,7 +44,7 @@ class Organism
 			end
 		end
 	
-	fun ref randomizeOne(characters: String, rand: Rand) =>
+	fun ref randomizeOne(characters: String, rand: SharedRand) =>
 		try
 			let i = rand.usize() % size
 			let c = characters(rand.usize() % characters.size())?
@@ -67,15 +72,15 @@ class val CAT
 	fun printOrganism(a:Organism) =>
 		Debug.out(a.string())
 		
-	fun generateOrganism(idx:USize, rand: Rand) : Organism => 
+	fun generateOrganism(idx:USize, rand: SharedRand) : Organism => 
 		let o = Organism.create_ref(size)
 		o.randomizeAll(characters, rand)
 		o
 	
 	fun cloneOrganism(a:Organism box): Organism val =>
 		Organism.create_val(a.string())
-	
-	fun breedOrganisms(a:Organism box, b:Organism box, child:Organism, rand:Rand) =>
+		
+	fun breedOrganisms(a:Organism box, b:Organism box, child:Organism, rand:SharedRand) =>
 		"""
 		Breed organisms delegate needs to breed two organisms together and put their chromosomes into the child
 	    in some manner. We have two ways we breed:
@@ -104,18 +109,18 @@ class val CAT
 			end
 		end
 	
-	fun scoreOrganism(a:Organism box, rand:Rand):I64 =>
+	fun scoreOrganism(a:Organism box, rand:SharedRand):I64 =>
 		var score:I64 = 0
         var diff:I64 = 0
 		try
 			for i in Range[USize](0, target.size() ) do
-	            diff = target(i)?.i64() - a.content(i)?.i64()
+	            diff = (target(i)? - a.content(i)?).i64()
 	            score = score + (diff * diff)
 			end
 		end
         -score
 	
-	fun chosenOrganism(a:Organism box, score:I64, rand:Rand): Bool =>
+	fun chosenOrganism(a:Organism box, score:I64, rand:SharedRand): Bool =>
 		//(score == 0)
 		false
 
@@ -131,7 +136,7 @@ actor Main
 				"A quick experiment with genetic algorithms in Pony", 
 				[ 
 					OptionSpec.u64("n", "size of string to generate" where short' = 'n', default' = 5000)
-					OptionSpec.u64("j", "amount of parallelism" where short' = 'j', default' = 1)
+					OptionSpec.u64("j", "number of processing actors" where short' = 'j', default' = @ponyint_cpu_count[U32]().u64())
 				], 
 				[  ]
 			)?.>add_help()?
@@ -153,21 +158,24 @@ actor Main
 				return
 			end
 	
-		let numThreads = cmd.option("j").u64()
+		let numProcessors = cmd.option("j").u64()
 		let sizeOfTarget = cmd.option("n").u64()
 				
 		Debug.out("")
-		Debug.out("Using " + numThreads.string() + " threads")
+		Debug.out("Using " + numProcessors.string() + " processing actors")
 		Debug.out("Target string size of " + sizeOfTarget.string() + " characters")
 		Debug.out("")
 		
 		let cat = CAT(sizeOfTarget.usize())
-		var ga = GeneticCoordinator(0, 5000, cat, {(bestOrganism: Organism box, bestScore: I64, numberOfGenerations:USize, runTimeInMS:U64)(out = _env.out) =>
-			// (swift): Done in 5000ms and 6,397,188 generations
-			// (pony): Done in 5001ms and 15,721,077 generations
-			// all done!
+		var ga = GeneticCoordinator(numProcessors.usize(), 5000, cat, {(bestOrganism: Organism box, bestScore: I64, numberOfGenerations:USize, runTimeInMS:U64)(out = _env.out) =>
 			out.print("[" + bestScore.string() + "] Best organism: " + bestOrganism.string())
 			out.print("Done in " + runTimeInMS.string() + "ms and " + numberOfGenerations.string() + " generations")
 		} val)			
 	
+	 	fun @runtime_override_defaults(rto: RuntimeOptions) =>
+			//rto.ponyanalysis= true
+			rto.ponynoscale = true
+			rto.ponynoblock = true
+			//rto.ponygcinitial = 0
+			//rto.ponygcfactor = 1.0
 
