@@ -135,7 +135,7 @@ actor Main
 				"PonyCAT", 
 				"A quick experiment with genetic algorithms in Pony", 
 				[ 
-					OptionSpec.u64("n", "size of string to generate" where short' = 'n', default' = 5000)
+					OptionSpec.u64("n", "size of string to generate" where short' = 'n', default' = 647)
 					OptionSpec.u64("j", "number of processing actors" where short' = 'j', default' = @ponyint_cpu_count[U32]().u64())
 				], 
 				[  ]
@@ -161,16 +161,27 @@ actor Main
 		let numProcessors = cmd.option("j").u64()
 		let sizeOfTarget = cmd.option("n").u64()
 				
-		Debug.out("")
-		Debug.out("Using " + numProcessors.string() + " processing actors")
-		Debug.out("Target string size of " + sizeOfTarget.string() + " characters")
-		Debug.out("")
+		//_env.out.print("")
+		//_env.out.print("Using " + numProcessors.string() + " processing actors")
+		//_env.out.print("Target string size of " + sizeOfTarget.string() + " characters")
+		//_env.out.print("")
 		
 		let cat = CAT(sizeOfTarget.usize())
-		var ga = GeneticCoordinator(numProcessors.usize(), 5000, cat, {(bestOrganism: Organism box, bestScore: I64, numberOfGenerations:USize, runTimeInMS:U64)(out = _env.out) =>
+		
+		GeneticCoordinator(1, 5000, cat, {(bestOrganism: Organism box, bestScore: I64, numberOfGenerations:USize, runTimeInMS:U64)(out = _env.out) =>
+			
+			out.print("\n\nSingle processor test\n")
 			out.print("[" + bestScore.string() + "] Best organism: " + bestOrganism.string())
 			out.print("Done in " + runTimeInMS.string() + "ms and " + numberOfGenerations.string() + " generations")
-		} val)			
+			
+			GeneticCoordinator(numProcessors.usize(), 5000, cat, {(bestOrganism: Organism box, bestScore: I64, numberOfGenerations:USize, runTimeInMS:U64)(out = _env.out) =>
+				
+				out.print("\n\nAll processor test\n")
+				out.print("[" + bestScore.string() + "] Best organism: " + bestOrganism.string())
+				out.print("Done in " + runTimeInMS.string() + "ms and " + numberOfGenerations.string() + " generations")
+			} val)
+			
+		} val)
 	
 	 	fun @runtime_override_defaults(rto: RuntimeOptions) =>
 			//rto.ponyanalysis= true
