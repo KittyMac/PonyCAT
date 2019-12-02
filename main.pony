@@ -185,8 +185,9 @@ actor Main
 	
 	 	fun @runtime_override_defaults(rto: RuntimeOptions) =>
 			//rto.ponyanalysis= true
+			rto.ponynoyield = true
 			rto.ponynoscale = true
 			rto.ponynoblock = true
-			//rto.ponygcinitial = 0
-			//rto.ponygcfactor = 1.0
+			rto.ponygcinitial = 0
+			rto.ponygcfactor = 1.0
 
