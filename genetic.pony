@@ -217,9 +217,7 @@ actor GeneticCoordinator
 		// Called by a processor when they've finished processing.  We need to 
 		// 1. Check if we found the solution or are over time.  If we are, we end
 		// 2. Check if the best organism is better than the previous best, if it is store it
-		// 2. Tell the processor to continue processing, giving it the best known organism
-		var finished = false
-		
+		// 2. Tell the processor to continue processing, giving it the best known organism		
 		numberOfGenerations = numberOfGenerations + generationsConsumed
 		
 		if newBestScore > bestOrganismScore then

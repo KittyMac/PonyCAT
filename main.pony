@@ -38,7 +38,7 @@ class Organism
 	fun ref randomizeAll(characters: String, rand: SharedRand) =>
 		content.clear()
 		try
-			for i in Range[USize](0, size) do
+			for _ in Range[USize](0, size) do
 				let c = characters(rand.usize() % characters.size())?
 				content.push(c)
 			end
